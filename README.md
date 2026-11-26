@@ -59,7 +59,9 @@ pip install -e ".[dev]"
 
 ## Dataset
 
-Place a CSV at `data/ResumeDataSet.csv` with these columns:
+The repository includes `data/ResumeDataSet.csv` on the `main` branch (962 resume examples in the original notebook output). The automated workflow uses this committed dataset. Do not commit private or identifiable candidate resumes. To substitute a different licensed dataset, keep the same two-column schema and update the workflow path.
+
+Expected columns:
 
 | Column | Description |
 |---|---|
@@ -108,8 +110,7 @@ curl -X POST http://127.0.0.1:8000/predict \
 
 The API accepts resume text between 20 and 30,000 characters. It does not log submitted resume text. Set `RESUME_MODEL_PATH` to use a model artifact at a non-default location.
 
-## Run tests
-
+## Automated GitHub Actions\n\nThe ML pipeline runs on pushes to `main` and the development branch, pull requests to `main`, and manual dispatch. It installs dependencies, runs tests, validates the committed CSV, trains both TF-IDF + MultinomialNB and TF-IDF + LinearSVC on the same stratified split, and uploads the trained LinearSVC artifact plus metrics and charts as a 30-day workflow artifact. Open the repository **Actions** tab, select **ML pipeline**, and open the latest successful run to download `resume-insights-ml-results`.\n\nThe original notebook reported 0.9378 test accuracy for its Naive Bayes experiment. That is a historical result, not a directly comparable score: the notebook's split and preprocessing may differ. The automated benchmark provides an apples-to-apples comparison on one shared split.\n\n## Run tests\n
 ```bash
 pytest
 ```
