@@ -1,0 +1,53 @@
+name: ML pipeline
+
+on:
+  push:
+    branches: [main, feature/production-resume-classifier]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-train-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install project and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Run tests
+        run: pytest -q
+      - name: Verify dataset is available
+        run: |
+          test -s data/ResumeDataSet.csv
+          python - <<'PY'
+          import pandas as pd
+          df = pd.read_csv("data/ResumeDataSet.csv")
+          required = {"Category", "Resume"}
+          missing = required - set(df.columns)
+          if missing:
+              raise SystemExit(f"Dataset is missing columns: {sorted(missing)}")
+          print(f"Dataset rows: {len(df)}")
+          print(f"Categories: {df['Category'].nunique()}")
+          PY
+      - name: Train and benchmark models
+        run: python -m resume_insights.train --data data/ResumeDataSet.csv
+      - name: Upload evaluation reports and model
+        uses: actions/upload-artifact@v4
+        with:
+          name: resume-insights-ml-results
+          path: |
+            reports/
+            models/resume_classifier.joblib
+          if-no-files-found: error
+          retention-days: 30

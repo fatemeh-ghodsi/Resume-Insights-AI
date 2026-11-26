@@ -1,14 +1,15 @@
-# Data Manipulation
-pandas
-numpy
+# Core
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+joblib>=1.3
 
-# Machine Learning
-scikit-learn
+# API
+fastapi>=0.110
+uvicorn[standard]>=0.27
 
-# Visualization
-matplotlib
-seaborn
-wordcloud
+# Development and tests
+pytest>=8.0
+httpx>=0.27
 
-# Optional: Notebook environment
-ipykernel
+matplotlib>=3.8
