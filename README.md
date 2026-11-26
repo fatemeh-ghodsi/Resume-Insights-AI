@@ -1,36 +1,38 @@
 # Resume Insights AI
 
-A reproducible NLP project that classifies resume text into job-related categories.
+A reproducible NLP project that classifies resume text into job-related categories and exposes predictions through a REST API.
 
 ## Current implementation
-
-The original notebook explored resume categorization with TF-IDF and Multinomial Naive Bayes. The new modular pipeline adds:
 
 - CSV validation for the required `Category` and `Resume` columns
 - Reusable text normalization and a scikit-learn Pipeline
 - TF-IDF unigram/bigram features with a LinearSVC classifier
 - Stratified train/test split and accuracy, macro-F1, weighted-F1 and per-class metrics
 - Saved model artifact, JSON metrics and confusion-matrix CSV
-- Command-line inference and basic automated tests
+- Command-line inference
+- FastAPI health and prediction endpoints with lazy model loading
+- Automated unit and API tests
+- Dockerfile for containerized inference
 
-**Important:** the LinearSVC pipeline is a new candidate model, not a proven improvement yet. Run it on the dataset and compare its held-out metrics against the notebook's Naive Bayes baseline before claiming a performance gain.
+**Model note:** LinearSVC is a candidate model, not a proven improvement over the original notebook's Multinomial Naive Bayes baseline. Train and compare both on the same held-out split before claiming a performance gain.
 
 ## Project structure
 
 ```text
 .
-├── data/
-│   └── ResumeDataSet.csv       # not committed; provide your own dataset
+├── data/                       # provide your own licensed dataset
 ├── models/                     # generated model artifacts (not committed)
 ├── reports/                    # generated evaluation reports
-├── src/
-│   └── resume_insights/
-│       ├── __init__.py
-│       ├── model.py
-│       ├── train.py
-│       └── predict.py
+├── src/resume_insights/
+│   ├── __init__.py
+│   ├── api.py                   # FastAPI application
+│   ├── model.py                 # preprocessing and model pipeline
+│   ├── predict.py               # CLI inference
+│   └── train.py                 # training and evaluation
 ├── tests/
+│   ├── test_api.py
 │   └── test_model.py
+├── Dockerfile
 ├── pyproject.toml
 └── requirements.txt
 ```
@@ -50,7 +52,7 @@ Activate the environment, then install:
 source .venv/bin/activate
 
 # Windows PowerShell
-.venv\Scripts\Activate.ps1
+.venv\\Scripts\\Activate.ps1
 
 pip install -e ".[dev]"
 ```
@@ -72,12 +74,6 @@ Rows with missing category or resume text are discarded. Each category must have
 python -m resume_insights.train --data data/ResumeDataSet.csv
 ```
 
-Optional arguments:
-
-```bash
-python -m resume_insights.train --help
-```
-
 The command writes:
 
 - `models/resume_classifier.joblib`
@@ -86,19 +82,31 @@ The command writes:
 
 Metrics are calculated on a held-out stratified test split. Do not compare results across runs unless the dataset version and split settings are the same.
 
-## Predict
+## Run the API locally
 
-After training:
-
-```bash
-python -m resume_insights.predict --text "Python developer with FastAPI and PostgreSQL experience"
-```
-
-Or provide a UTF-8 text file:
+Train the model first, then start the server from the repository root:
 
 ```bash
-python -m resume_insights.predict --file path/to/resume.txt
+uvicorn resume_insights.api:app --app-dir src --reload
 ```
+
+Open the interactive API documentation at `http://127.0.0.1:8000/docs`.
+
+### Health check
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+### Predict a category
+
+```bash
+curl -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Experienced Python developer building FastAPI and PostgreSQL services"}'
+```
+
+The API accepts resume text between 20 and 30,000 characters. It does not log submitted resume text. Set `RESUME_MODEL_PATH` to use a model artifact at a non-default location.
 
 ## Run tests
 
@@ -106,19 +114,29 @@ python -m resume_insights.predict --file path/to/resume.txt
 pytest
 ```
 
+## Run with Docker
+
+Build after training the model:
+
+```bash
+docker build -t resume-insights-ai .
+docker run --rm -p 8000:8000 resume-insights-ai
+```
+
+The trained artifact must exist at `models/resume_classifier.joblib` before building the image. For production deployments, use a private image registry and appropriate access controls.
+
 ## Responsible use and privacy
 
-This is a portfolio/learning classifier, not a validated hiring or candidate-screening decision system. Predictions can reflect dataset bias and should never be used as the sole basis for employment decisions. Resume text may contain personal data: do not upload real candidates' resumes to public services or commit them to Git. Obtain an appropriate legal basis and consent where required, minimize retained data, and anonymize examples.
+This is a portfolio/learning classifier, not a validated hiring or candidate-screening decision system. Predictions can reflect dataset bias and must never be used as the sole basis for employment decisions. Resume text may contain personal data: do not upload real candidates' resumes to public services or commit them to Git. Obtain an appropriate legal basis and consent where required, minimize retained data, and anonymize examples.
 
-Only load model artifacts that you created or trust. Joblib uses Python serialization and loading an untrusted artifact can execute code.
+Only load model artifacts that you created or trust. Joblib uses Python serialization and loading an untrusted artifact can execute code. The API is a demonstration and should be deployed behind authentication, rate limiting, TLS and suitable privacy controls before any real-world use.
 
 ## Next milestones
 
 1. Benchmark Naive Bayes, LinearSVC and Logistic Regression on the same stratified split.
 2. Add cross-validation and error analysis, including per-category precision/recall.
-3. Add a FastAPI inference endpoint with request validation.
-4. Add Docker, CI and a small synthetic demo dataset.
-5. Consider multilingual models only after establishing a reliable baseline.
+3. Add CI and a small synthetic demo dataset.
+4. Consider multilingual models only after establishing a reliable baseline.
 
 ## License
 
