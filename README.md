@@ -20,7 +20,7 @@ A reproducible NLP project that classifies resume text into job-related categori
 
 ```text
 .
-├── data/                       # provide your own licensed dataset
+├── data/                       # committed resume classification dataset
 ├── models/                     # generated model artifacts (not committed)
 ├── reports/                    # generated evaluation reports
 ├── src/resume_insights/
@@ -59,7 +59,7 @@ pip install -e ".[dev]"
 
 ## Dataset
 
-The repository includes `data/ResumeDataSet.csv` on the `main` branch (962 resume examples in the original notebook output). The automated workflow uses this committed dataset. Do not commit private or identifiable candidate resumes. To substitute a different licensed dataset, keep the same two-column schema and update the workflow path.
+The repository includes `data/ResumeDataSet.csv` (about 3.1 MB). The original notebook output indicates 962 rows after dropping missing values. The automated workflow uses this committed dataset. Do not commit private or identifiable candidate resumes. To substitute a different appropriately licensed dataset, keep the same two-column schema and update the workflow path.
 
 Expected columns:
 
@@ -68,7 +68,7 @@ Expected columns:
 | `Category` | Target job category |
 | `Resume` | Resume text |
 
-Rows with missing category or resume text are discarded. Each category must have at least two samples for a stratified split. The dataset is intentionally not included in this repository; use a dataset you are licensed to process.
+Rows with missing category or resume text are discarded. Each category must have at least two samples for a stratified split. The committed dataset is used by the demo workflow. Verify its provenance and license before redistributing it or using it outside this portfolio project.
 
 ## Train and evaluate
 
@@ -80,7 +80,7 @@ The command writes:
 
 - `models/resume_classifier.joblib`
 - `reports/metrics.json`
-- `reports/confusion_matrix.csv`
+- `reports/confusion_matrix_linearsvc.csv` and `reports/confusion_matrix_naive_bayes.csv`\n- `reports/model_comparison.png` (Accuracy and Macro-F1)\n- `reports/confusion_matrix_linearsvc.png`
 
 Metrics are calculated on a held-out stratified test split. Do not compare results across runs unless the dataset version and split settings are the same.
 
