@@ -80,7 +80,9 @@ The command writes:
 
 - `models/resume_classifier.joblib`
 - `reports/metrics.json`
-- `reports/confusion_matrix_linearsvc.csv` and `reports/confusion_matrix_naive_bayes.csv`\n- `reports/model_comparison.png` (Accuracy and Macro-F1)\n- `reports/confusion_matrix_linearsvc.png`
+- `reports/confusion_matrix_linearsvc.csv` and `reports/confusion_matrix_naive_bayes.csv`
+- `reports/model_comparison.png` (Accuracy and Macro-F1)
+- `reports/confusion_matrix_linearsvc.png`
 
 Metrics are calculated on a held-out stratified test split. Do not compare results across runs unless the dataset version and split settings are the same.
 
@@ -110,7 +112,14 @@ curl -X POST http://127.0.0.1:8000/predict \
 
 The API accepts resume text between 20 and 30,000 characters. It does not log submitted resume text. Set `RESUME_MODEL_PATH` to use a model artifact at a non-default location.
 
-## Automated GitHub Actions\n\nThe ML pipeline runs on pushes to `main` and the development branch, pull requests to `main`, and manual dispatch. It installs dependencies, runs tests, validates the committed CSV, trains both TF-IDF + MultinomialNB and TF-IDF + LinearSVC on the same stratified split, and uploads the trained LinearSVC artifact plus metrics and charts as a 30-day workflow artifact. Open the repository **Actions** tab, select **ML pipeline**, and open the latest successful run to download `resume-insights-ml-results`.\n\nThe original notebook reported 0.9378 test accuracy for its Naive Bayes experiment. That is a historical result, not a directly comparable score: the notebook's split and preprocessing may differ. The automated benchmark provides an apples-to-apples comparison on one shared split.\n\n## Run tests\n
+## Automated GitHub Actions
+
+The ML pipeline runs on pushes to `main` and the development branch, pull requests to `main`, and manual dispatch. It installs dependencies, runs tests, validates the committed CSV, trains both TF-IDF + MultinomialNB and TF-IDF + LinearSVC on the same stratified split, and uploads the trained LinearSVC artifact plus metrics and charts as a 30-day workflow artifact. Open the repository **Actions** tab, select **ML pipeline**, and open the latest successful run to download `resume-insights-ml-results`.
+
+The original notebook reported 0.9378 test accuracy for its Naive Bayes experiment. That is a historical result, not a directly comparable score: the notebook's split and preprocessing may differ. The automated benchmark provides an apples-to-apples comparison on one shared split.
+
+## Run tests
+
 ```bash
 pytest
 ```
